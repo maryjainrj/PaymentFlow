@@ -3,23 +3,19 @@ spring:
     name: payflow
 
   datasource:
-    url: jdbc:h2:mem:payflowdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/payflowdb
+    username: postgres
+    password: admin123
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
 
 logging:
   level:
