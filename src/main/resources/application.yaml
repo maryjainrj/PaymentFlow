@@ -1,12 +1,10 @@
 spring:
   application:
     name: payflow
-
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,10 +12,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
 logging:
   level:
     com.payflow: DEBUG
-
 server:
   port: 8080
+application:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION}
