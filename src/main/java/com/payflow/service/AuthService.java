@@ -2,6 +2,7 @@ package com.payflow.service;
 
 
 import com.payflow.dto.AuthDto;
+import com.payflow.exception.EmailAlreadyExistsException;
 import com.payflow.model.Role;
 import com.payflow.model.User;
 import com.payflow.repository.UserRepository;
@@ -28,7 +29,8 @@ public class AuthService {
         log.info("Registering new user with email:{}",request.getEmail());
 
         if(userRepository.findByEmail(request.getEmail()).isPresent()){
-            throw new RuntimeException("Email already exists");
+            throw new EmailAlreadyExistsException(request.getEmail());
+
         }
 
         User user=User.builder()

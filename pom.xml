@@ -91,6 +91,18 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- Kafka - NO version needed, managed by Spring Boot parent -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
+        <!-- Kafka Test -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

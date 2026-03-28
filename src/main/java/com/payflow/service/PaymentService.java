@@ -2,6 +2,8 @@ package com.payflow.service;
 
 import com.payflow.dto.PaymentDto;
 import com.payflow.exception.PaymentNotFoundException;
+import com.payflow.kafka.PaymentEventProducer;
+import com.payflow.kafka.dto.PaymentEventDto;
 import com.payflow.model.Payment;
 import com.payflow.model.PaymentStatus;
 import com.payflow.repository.PaymentRepository;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 public class PaymentService {
 
+  private final PaymentEventProducer paymentEventProducer;
 
   private final PaymentRepository paymentRepository;
 
@@ -36,7 +39,20 @@ public class PaymentService {
               .build();
 
       Payment saved=paymentRepository.save(payment);
-      log.info("Payment created from sender: {}",saved.getId());
+
+    paymentEventProducer.publishPaymentCreated(PaymentEventDto.builder()
+            .paymentId(saved.getId())
+            .senderId(saved.getSenderId())
+            .receiverId(saved.getReceiverId())
+            .amount(saved.getAmount())
+            .currency(saved.getCurrency())
+            .status(saved.getStatus())
+            .eventType("PAYMENT_CREATED")
+            .occurredAt(saved.getCreatedAt())
+            .build());
+
+
+    log.info("Payment created with id: {}", saved.getId());
       return toResponse(saved);
   }
 
@@ -76,6 +92,18 @@ public class PaymentService {
             .orElseThrow(() -> new PaymentNotFoundException(id));
     payment.setStatus(request.getStatus());
     Payment updated=paymentRepository.save(payment);
+
+    paymentEventProducer.publishPaymentStatusUpdated(PaymentEventDto.builder()
+            .paymentId(updated.getId())
+            .senderId(updated.getSenderId())
+            .receiverId(updated.getReceiverId())
+            .amount(updated.getAmount())
+            .currency(updated.getCurrency())
+            .status(updated.getStatus())
+            .eventType("PAYMENT_STATUS_UPDATED")
+            .occurredAt(updated.getUpdatedAt())
+            .build());
+
     return toResponse(updated);
   }
 
