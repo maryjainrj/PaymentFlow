@@ -37,3 +37,20 @@ application:
     jwt:
       secret: ${JWT_SECRET}
       expiration: ${JWT_EXPIRATION}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: PayFlow
+    version: 1.0.0
+    description: Banking Payment Platform

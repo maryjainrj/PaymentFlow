@@ -1,5 +1,6 @@
 package com.payflow.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,41 +27,45 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
 
     @Override
-
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
-            ) throws ServletException, IOException {
-          final String authHeader=request.getHeader("Authorization");
-          final String jwt;
-          final String userEmail;
+    ) throws ServletException, IOException {
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String userEmail;
 
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-          if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-              filterChain.doFilter(request,response);
-              return;
-          }
+        jwt = authHeader.substring(7);
 
-          jwt=authHeader.substring(7);
-          userEmail=jwtService.extractUsername(jwt);
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT token expired: {}", e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        } catch (Exception e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-          if (userEmail!=null && SecurityContextHolder.getContext().getAuthentication()==null) {
-
-              UserDetails userDetails=userDetailsService.loadUserByUsername(userEmail);
-
-              if(jwtService.isTokenValid(jwt,userDetails)){
-                  UsernamePasswordAuthenticationToken authToken=new UsernamePasswordAuthenticationToken
-                          (userDetails, null, userDetails.getAuthorities());
-                  authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                  SecurityContextHolder.getContext().setAuthentication(authToken);
-                  log.debug("Authenticated user:{}",userEmail);
-
-              }
-
-
-          }
-          filterChain.doFilter(request,response);
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                log.debug("Authenticated user: {}", userEmail);
+            }
+        }
+        filterChain.doFilter(request, response);
     }
 
 
